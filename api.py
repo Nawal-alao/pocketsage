@@ -35,7 +35,7 @@ app.add_middleware(
 )
 
 # ── STATIC FILES ──
-app.mount("/", StaticFiles(directory="web", html=True), name="static")
+app.mount("/assets", StaticFiles(directory="web"), name="static")
 
 # ── ORCHESTRATOR (singleton) ──
 orchestrator = OrchestratorAgent()
