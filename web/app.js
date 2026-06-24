@@ -3,7 +3,7 @@
  * Gère l'UI, les appels API vers FastAPI, et l'état de l'app.
  */
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = window.location.origin;
 const USER_ID = "user_demo";
 
 let currentLang = "fr";
