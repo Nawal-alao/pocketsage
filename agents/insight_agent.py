@@ -7,12 +7,12 @@ adaptées au contexte économique d'Afrique de l'Ouest.
 import time
 import os
 import json
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 from tools.storage import get_transactions, get_summary
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
 
 SYSTEM_PROMPT = """
@@ -48,10 +48,9 @@ class InsightAgent:
     """
 
     def __init__(self):
-        self.model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash-lite",
-            system_instruction=SYSTEM_PROMPT,
-        )
+        self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+        self.model_name = "gemini-2.0-flash-lite"
+        self.system_instruction = SYSTEM_PROMPT
 
     def _call_with_retry(self, fn, *args, retries=3, wait=30):
         """Appel API avec retry automatique en cas de quota dépassé."""
@@ -122,7 +121,12 @@ class InsightAgent:
         """
 
         try:
-            result = self._call_with_retry(self.model.generate_content, prompt)
+            result = self._call_with_retry(
+                self.client.models.generate_content,
+                model=self.model_name,
+                contents=prompt,
+                config={"system_instruction": self.system_instruction},
+            )
             return result.text
         except Exception as e:
             return f"Erreur InsightAgent : {e}"
@@ -148,7 +152,12 @@ class InsightAgent:
         """
 
         try:
-            result = self._call_with_retry(self.model.generate_content, prompt)
+            result = self._call_with_retry(
+                self.client.models.generate_content,
+                model=self.model_name,
+                contents=prompt,
+                config={"system_instruction": self.system_instruction},
+            )
             return result.text
         except Exception as e:
             return f"Erreur détection anomalies : {e}"

@@ -8,14 +8,14 @@ from .antigravity_agent import AntigravityAgent
 import time
 import os
 import json
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 from .budget_agent import BudgetAgent
 from .insight_agent import InsightAgent
 from .alert_agent import AlertAgent
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
 
 SYSTEM_PROMPT = """
@@ -124,10 +124,9 @@ class OrchestratorAgent:
     """
 
     def __init__(self):
-        self.model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash-lite",
-            system_instruction=SYSTEM_PROMPT,
-        )
+        self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+        self.model_name = "gemini-2.0-flash-lite"
+        self.system_instruction = SYSTEM_PROMPT
         # Initialisation des sous-agents
         self.budget_agent = BudgetAgent()
         self.insight_agent = InsightAgent()
@@ -156,7 +155,12 @@ class OrchestratorAgent:
         Analyse le message et retourne l'intention détectée.
         """
         try:
-            result = self._call_with_retry(self.model.generate_content, message)
+            result = self._call_with_retry(
+                self.client.models.generate_content,
+                model=self.model_name,
+                contents=message,
+                config={"system_instruction": self.system_instruction},
+            )
             text = result.text.strip()
 
             import re

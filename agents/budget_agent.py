@@ -6,12 +6,11 @@ Comprend le Français, l'Anglais, le Fon et le Yoruba.
 
 import time
 import os
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 from tools.storage import add_transaction, get_summary
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 
 SYSTEM_PROMPT = """
@@ -60,10 +59,9 @@ class BudgetAgent:
     """
 
     def __init__(self):
-        self.model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash-lite",
-            system_instruction=SYSTEM_PROMPT,
-        )
+        self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+        self.model_name = "gemini-2.0-flash-lite"
+        self.system_instruction = SYSTEM_PROMPT
         self.chat_sessions = {}  # user_id -> session
 
     def _call_with_retry(self, fn, *args, retries=3, wait=30):
@@ -82,7 +80,11 @@ class BudgetAgent:
     def _get_session(self, user_id: str):
         """Récupère ou crée une session de chat pour l'utilisateur."""
         if user_id not in self.chat_sessions:
-            self.chat_sessions[user_id] = self.model.start_chat(history=[])
+            self.chat_sessions[user_id] = self.client.chats.create(
+                model=self.model_name,
+                config={"system_instruction": self.system_instruction},
+                history=[],
+            )
         return self.chat_sessions[user_id]
 
     def _extract_transaction(self, text: str) -> dict | None:
@@ -113,7 +115,15 @@ class BudgetAgent:
         session = self._get_session(user_id)
 
         try:
-            result = self._call_with_retry(session.send_message, message)
+            result = self._call_with_retry(
+                session.send_message,
+                message,
+                {
+                    "config": {
+                        "system_instruction": self.system_instruction,
+                    }
+                },
+            )
             response_text = result.text
 
             # Extraire la transaction si présente

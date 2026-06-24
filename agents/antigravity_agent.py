@@ -14,12 +14,12 @@ Exemple : "Est-ce que j'achète une moto maintenant ou j'attends ?"
 
 import os
 import json
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 from tools.storage import get_summary, get_transactions, load_user_data
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
 ANTIGRAVITY_MODEL = "antigravity-preview-05-2026"
 
@@ -62,21 +62,21 @@ class AntigravityAgent:
     """
 
     def __init__(self):
+        self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+        self.model_name = ANTIGRAVITY_MODEL
+        self.system_instruction = SYSTEM_PROMPT
+        self.available = True
+
         try:
-            self.model = genai.GenerativeModel(
-                model_name=ANTIGRAVITY_MODEL,
-                system_instruction=SYSTEM_PROMPT,
+            # On vérifie seulement que le modèle est accessible en créant une requête
+            self.client.models.compute_tokens(
+                model=self.model_name,
+                contents=["Validation du modèle Antigravity"],
             )
-            self.available = True
-            print(f"[AntigravityAgent] ✅ Modèle {ANTIGRAVITY_MODEL} disponible")
-        except Exception as e:
-            # Fallback sur gemini-2.0-flash-lite si antigravity indisponible
-            print(f"[AntigravityAgent] ⚠️ Antigravity indisponible ({e}), fallback activé")
-            self.model = genai.GenerativeModel(
-                model_name="gemini-2.0-flash-lite",
-                system_instruction=SYSTEM_PROMPT,
-            )
+        except Exception:
             self.available = False
+            self.model_name = "gemini-2.0-flash-lite"
+            print(f"[AntigravityAgent] ⚠️ Antigravity indisponible, fallback activé")
 
     def analyze_decision(
         self,
@@ -168,7 +168,11 @@ Structure ta réponse EXACTEMENT ainsi (JSON uniquement, pas de texte autour) :
 """
 
         try:
-            result = self.model.generate_content(prompt)
+            result = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config={"system_instruction": self.system_instruction},
+            )
             text = result.text.strip()
 
             # Nettoyer le JSON
@@ -214,7 +218,11 @@ Donne un conseil court, pratique et adapté au contexte africain.
 Réponds en {lang}. Maximum 4 phrases.
 """
         try:
-            result = self.model.generate_content(prompt)
+            result = self.client.models.generate_content(
+                model=self.model_name,
+                contents=prompt,
+                config={"system_instruction": self.system_instruction},
+            )
             return result.text
         except Exception as e:
             return f"Erreur : {e}"
