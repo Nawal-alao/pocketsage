@@ -4,6 +4,7 @@ Le cerveau central qui reçoit chaque message, détecte l'intention
 et route vers le bon sous-agent.
 Supporte : Français, Anglais, Fon, Yoruba
 """
+from .antigravity_agent import AntigravityAgent
 import time
 import os
 import json
@@ -50,12 +51,17 @@ Détecte automatiquement la langue du message :
 
 RÉPONSE OBLIGATOIRE en JSON uniquement :
 {
-    "intent": "budget" | "insight" | "alert" | "general",
+    "intent": "budget" | "insight" | "alert" | "antigravity" | "general",
     "lang": "fr" | "en" | "fon" | "yo",
     "month": "YYYY-MM" | null,
     "confidence": 0.0 à 1.0,
     "general_response": "réponse si intent=general, sinon null"
 }
+
+5. ANTIGRAVITY_AGENT → si l'utilisateur veut :
+   - Prendre une décision financière importante ("devrais-je acheter", "est-ce le bon moment")
+   - Comparer des options ("moto ou moto-taxi", "épargner ou investir")
+   - Planification long terme ("dans 6 mois je veux", "comment atteindre")
 """
 
 WELCOME_MESSAGES = {
@@ -129,6 +135,8 @@ class OrchestratorAgent:
 
         # Langue par défaut par utilisateur
         self.user_langs = {}
+
+        self.antigravity_agent = AntigravityAgent()
 
     def _call_with_retry(self, fn, *args, retries=3, wait=30):
         """Appel API avec retry automatique en cas de quota dépassé."""
@@ -228,6 +236,27 @@ class OrchestratorAgent:
                     "alert_level": alert.get("level", "green"),
                     "actions": alert.get("actions", []),
                 },
+            }
+
+        elif intent == "antigravity":
+            result = self.antigravity_agent.analyze_decision(
+                user_id, message, lang
+            )
+            # Formater la réponse pour le chat
+            response_parts = [result.get("recommendation", "")]
+            scenarios = result.get("scenarios", [])
+            if scenarios:
+                response_parts.append("\n\n**Scénarios analysés :**")
+                for s in scenarios:
+                    response_parts.append(
+                        f"\n{s.get('label', '')}: {s.get('description', '')}"
+                    )
+            return {
+                "response": "\n".join(response_parts),
+                "intent": "antigravity",
+                "lang": lang,
+                "agent_used": "AntigravityAgent",
+                "data": result,
             }
 
         else:

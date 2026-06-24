@@ -176,6 +176,22 @@ async def get_insight(user_id: str, month: str = None, lang: str = "fr"):
     return {"user_id": user_id, "analysis": analysis}
 
 
+@app.post("/decision")
+async def analyze_decision(
+    user_id: str,
+    question: str,
+    lang: str = "fr"
+):
+    """
+    Analyse une décision financière complexe avec Antigravity.
+    Retourne plusieurs scénarios et une recommandation.
+    """
+    from agents.antigravity_agent import AntigravityAgent
+    agent = AntigravityAgent()
+    result = agent.analyze_decision(user_id, question, lang)
+    return result
+
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("APP_PORT", 8000))
