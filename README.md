@@ -1,3 +1,14 @@
+---
+title: PocketSage
+emoji: 💰
+colorFrom: yellow
+colorTo: green
+sdk: docker
+pinned: false
+license: mit
+short_description: AI Finance Assistant for West Africa
+---
+
 # 💰 PocketSage — AI-Powered Personal Finance Assistant for West Africa
 
 > **Concierge Agent Track** — Kaggle AI Agents Intensive Vibe Coding Capstone 2026
