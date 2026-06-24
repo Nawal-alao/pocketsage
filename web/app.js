@@ -6,7 +6,7 @@
 const API_BASE = window.location.origin;
 const USER_ID = "user_demo";
 
-let currentLang = "fr";
+let currentLang = "en";
 let currentView = "dashboard";
 
 // ── NAVIGATION ──
