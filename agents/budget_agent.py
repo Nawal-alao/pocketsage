@@ -7,6 +7,7 @@ Comprend le Français, l'Anglais, le Fon et le Yoruba.
 import time
 import os
 from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 from tools.storage import add_transaction, get_summary
 
@@ -60,15 +61,15 @@ class BudgetAgent:
 
     def __init__(self):
         self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
-        self.model_name = "gemini-2.0-flash-lite"
+        self.model_name = "gemini-2.5-flash"
         self.system_instruction = SYSTEM_PROMPT
         self.chat_sessions = {}  # user_id -> session
 
-    def _call_with_retry(self, fn, *args, retries=3, wait=30):
+    def _call_with_retry(self, fn, *args, retries=3, wait=30, **kwargs):
         """Appel API avec retry automatique en cas de quota dépassé."""
         for attempt in range(retries):
             try:
-                return fn(*args)
+                return fn(*args, **kwargs)
             except Exception as e:
                 if "429" in str(e) and attempt < retries - 1:
                     console_wait = wait * (attempt + 1)
@@ -82,8 +83,9 @@ class BudgetAgent:
         if user_id not in self.chat_sessions:
             self.chat_sessions[user_id] = self.client.chats.create(
                 model=self.model_name,
-                config={"system_instruction": self.system_instruction},
-                history=[],
+                config=types.GenerateContentConfig(
+                    system_instruction=self.system_instruction
+                ),
             )
         return self.chat_sessions[user_id]
 
@@ -115,15 +117,8 @@ class BudgetAgent:
         session = self._get_session(user_id)
 
         try:
-            result = self._call_with_retry(
-                session.send_message,
-                message,
-                {
-                    "config": {
-                        "system_instruction": self.system_instruction,
-                    }
-                },
-            )
+            # Utiliser la session de chat — message est bien défini ici
+            result = self._call_with_retry(session.send_message, message)
             response_text = result.text
 
             # Extraire la transaction si présente

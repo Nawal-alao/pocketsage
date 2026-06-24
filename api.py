@@ -85,7 +85,7 @@ async def chat(req: ChatRequest):
     if not req.message.strip():
         raise HTTPException(status_code=400, detail="Message vide")
 
-    result = orchestrator.process(req.user_id, req.message)
+    result = orchestrator.process(req.user_id, req.message, req.lang)
     return result
 
 

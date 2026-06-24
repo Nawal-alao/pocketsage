@@ -15,6 +15,7 @@ Exemple : "Est-ce que j'achète une moto maintenant ou j'attends ?"
 import os
 import json
 from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 from tools.storage import get_summary, get_transactions, load_user_data
 
@@ -75,7 +76,7 @@ class AntigravityAgent:
             )
         except Exception:
             self.available = False
-            self.model_name = "gemini-2.0-flash-lite"
+            self.model_name = "gemini-2.5-flash"
             print(f"[AntigravityAgent] ⚠️ Antigravity indisponible, fallback activé")
 
     def analyze_decision(
@@ -171,7 +172,7 @@ Structure ta réponse EXACTEMENT ainsi (JSON uniquement, pas de texte autour) :
             result = self.client.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
-                config={"system_instruction": self.system_instruction},
+                config=types.GenerateContentConfig(system_instruction=self.system_instruction),
             )
             text = result.text.strip()
 
@@ -179,7 +180,7 @@ Structure ta réponse EXACTEMENT ainsi (JSON uniquement, pas de texte autour) :
             import re
             text = re.sub(r"```json|```", "", text).strip()
             parsed = json.loads(text)
-            parsed["model_used"] = ANTIGRAVITY_MODEL if self.available else "gemini-2.0-flash-lite (fallback)"
+            parsed["model_used"] = ANTIGRAVITY_MODEL if self.available else "gemini-2.5-flash (fallback)"
             return parsed
 
         except json.JSONDecodeError:
@@ -221,7 +222,7 @@ Réponds en {lang}. Maximum 4 phrases.
             result = self.client.models.generate_content(
                 model=self.model_name,
                 contents=prompt,
-                config={"system_instruction": self.system_instruction},
+                config=types.GenerateContentConfig(system_instruction=self.system_instruction),
             )
             return result.text
         except Exception as e:

@@ -8,6 +8,7 @@ import time
 import os
 import json
 from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 from tools.storage import get_transactions, get_summary
 
@@ -49,14 +50,14 @@ class InsightAgent:
 
     def __init__(self):
         self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
-        self.model_name = "gemini-2.0-flash-lite"
+        self.model_name = "gemini-2.5-flash"
         self.system_instruction = SYSTEM_PROMPT
 
-    def _call_with_retry(self, fn, *args, retries=3, wait=30):
+    def _call_with_retry(self, fn, *args, retries=3, wait=30, **kwargs):
         """Appel API avec retry automatique en cas de quota dépassé."""
         for attempt in range(retries):
             try:
-                return fn(*args)
+                return fn(*args, **kwargs)
             except Exception as e:
                 if "429" in str(e) and attempt < retries - 1:
                     console_wait = wait * (attempt + 1)
@@ -125,7 +126,7 @@ class InsightAgent:
                 self.client.models.generate_content,
                 model=self.model_name,
                 contents=prompt,
-                config={"system_instruction": self.system_instruction},
+                config=types.GenerateContentConfig(system_instruction=self.system_instruction),
             )
             return result.text
         except Exception as e:
@@ -156,7 +157,7 @@ class InsightAgent:
                 self.client.models.generate_content,
                 model=self.model_name,
                 contents=prompt,
-                config={"system_instruction": self.system_instruction},
+                config=types.GenerateContentConfig(system_instruction=self.system_instruction),
             )
             return result.text
         except Exception as e:

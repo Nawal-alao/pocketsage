@@ -18,33 +18,49 @@ document.querySelectorAll(".nav-item").forEach(btn => {
 });
 
 function switchView(view) {
-  // Nav items
-  document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
-  document.querySelector(`[data-view="${view}"]`).classList.add("active");
+  function doSwitch() {
+    // Nav items
+    document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
+    document.querySelector(`[data-view="${view}"]`).classList.add("active");
 
-  // Views
-  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-  document.getElementById(`view-${view}`).classList.add("active");
+    // Views
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById(`view-${view}`).classList.add("active");
 
-  currentView = view;
+    currentView = view;
 
-  // Titres
-  const titles = {
-    dashboard: { title: "Dashboard", subtitle: "Vue d'ensemble de tes finances" },
-    chat: { title: "Assistant", subtitle: "Parle à PocketSage" },
-    transactions: { title: "Transactions", subtitle: "Historique complet" },
-    alerts: { title: "Alertes", subtitle: "Situation et prévisions" },
-  };
+    // Titres
+    const titles = {
+      dashboard: { title: "Dashboard", subtitle: "Overview of your finances" },
+      chat: { title: "Assistant", subtitle: "Talk to PocketSage" },
+      transactions: { title: "Transactions", subtitle: "Full transaction history" },
+      alerts: { title: "Alerts", subtitle: "Status and outlook" },
+    };
 
-  const t = titles[view] || titles.dashboard;
-  document.getElementById("page-title").textContent = t.title;
-  document.getElementById("page-subtitle").textContent = t.subtitle;
+    const t = titles[view] || titles.dashboard;
+    document.getElementById("page-title").textContent = t.title;
+    document.getElementById("page-subtitle").textContent = t.subtitle;
 
-  // Charger les données selon la vue
-  if (view === "dashboard") loadDashboard();
-  if (view === "transactions") loadTransactions();
-  if (view === "alerts") loadAlerts();
-  if (view === "chat") initChat();
+    // Charger les données selon la vue
+    if (view === "dashboard") loadDashboard();
+    if (view === "transactions") loadTransactions();
+    if (view === "alerts") loadAlerts();
+    if (view === "chat") initChat();
+
+    // Route focus to heading for accessibility
+    const heading = document.getElementById("page-title");
+    if (heading) heading.focus();
+
+    // Close mobile sidebar if open
+    closeSidebar();
+  }
+
+  // Use View Transitions API for smooth animation if supported
+  if (document.startViewTransition) {
+    document.startViewTransition(() => doSwitch());
+  } else {
+    doSwitch();
+  }
 }
 
 // ── LANGUE ──
@@ -55,6 +71,34 @@ document.querySelectorAll(".lang-btn").forEach(btn => {
     currentLang = btn.dataset.lang;
   });
 });
+
+// ── MOBILE SIDEBAR TOGGLE ──
+function openSidebar() {
+  document.querySelector(".sidebar").classList.add("open");
+  document.getElementById("sidebar-overlay").classList.add("active");
+}
+
+function closeSidebar() {
+  document.querySelector(".sidebar").classList.remove("open");
+  document.getElementById("sidebar-overlay").classList.remove("active");
+}
+
+const menuToggle = document.getElementById("menu-toggle");
+if (menuToggle) {
+  menuToggle.addEventListener("click", () => {
+    const sidebar = document.querySelector(".sidebar");
+    if (sidebar.classList.contains("open")) {
+      closeSidebar();
+    } else {
+      openSidebar();
+    }
+  });
+}
+
+const sidebarOverlay = document.getElementById("sidebar-overlay");
+if (sidebarOverlay) {
+  sidebarOverlay.addEventListener("click", closeSidebar);
+}
 
 // ── DASHBOARD ──
 async function loadDashboard() {
@@ -89,7 +133,7 @@ async function loadRecentTransactions() {
     const list = document.getElementById("recent-list");
 
     if (!data.transactions || data.transactions.length === 0) {
-      list.innerHTML = `<p class="empty-state">Aucune transaction pour l'instant.<br/>Commence à parler à ton assistant !</p>`;
+      list.innerHTML = `<p class="empty-state">No transactions yet.<br/>Start talking to your assistant!</p>`;
       return;
     }
 
@@ -166,7 +210,7 @@ function addAgentMessage(text, agent = "PocketSage", extra = null) {
     const tx = extra.transaction;
     extraHTML = `
       <div class="tx-saved-badge">
-        ✅ ${tx.type === "depense" ? "Dépense" : "Revenu"} enregistré(e) :
+        ✅ ${tx.type === "depense" ? "Expense" : "Income"} saved:
         ${formatCFA(tx.montant)} • ${tx.categorie} • ${tx.source}
       </div>
     `;
@@ -268,7 +312,7 @@ async function sendMessage() {
 
   } catch (e) {
     removeTypingIndicator();
-    addAgentMessage("❌ Erreur de connexion. Vérifie que le serveur tourne.", "Système");
+    addAgentMessage("❌ Connection error. Check that the server is running.", "System");
   }
 
   btn.disabled = false;
@@ -283,10 +327,10 @@ function sendSuggestion(btn) {
 // ── QUICK ACTIONS ──
 function quickAction(type) {
   const messages = {
-    depense: "J'ai fait une dépense",
-    revenu: "J'ai reçu de l'argent",
-    analyse: "Analyse mes dépenses ce mois",
-    alerte: "Vais-je tenir jusqu'à la fin du mois ?",
+    depense: "I made an expense",
+    revenu: "I received money",
+    analyse: "Analyze my expenses this month",
+    alerte: "Will I make it to the end of the month?",
   };
   switchView("chat");
   setTimeout(() => {
@@ -307,7 +351,7 @@ async function loadTransactions() {
     const tbody = document.getElementById("transactions-tbody");
 
     if (!data.transactions || data.transactions.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Aucune transaction</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No transactions</td></tr>`;
       return;
     }
 
@@ -317,7 +361,7 @@ async function loadTransactions() {
         <td>${tx.description || "-"}</td>
         <td>${tx.categorie || "-"}</td>
         <td><span class="badge ${tx.source || 'cash'}">${tx.source || "cash"}</span></td>
-        <td><span class="badge ${tx.type}">${tx.type}</span></td>
+        <td><span class="badge ${tx.type}">${tx.type === "depense" ? "Expense" : "Income"}</span></td>
         <td class="tx-amount ${tx.type}">
           ${tx.type === "depense" ? "-" : "+"}${formatCFA(tx.montant)}
         </td>
@@ -351,29 +395,29 @@ async function loadAlerts() {
     container.innerHTML = `
       <div class="alert-card ${data.level || 'green'}">
         <h3 style="font-size:16px; margin-bottom:8px;">
-          <span class="material-symbols-outlined">${icon}</span> Situation financière du mois
+          <span class="material-symbols-outlined">${icon}</span> Financial outlook for the month
         </h3>
         <p style="color: var(--text-muted); font-size:14px; line-height:1.7;">
-          ${data.message || "Situation saine. Continue comme ça !"}
+          ${data.message || "Your finances look healthy. Keep it up!"}
         </p>
         ${actionsHTML}
       </div>
     `;
   } catch (e) {
     document.getElementById("alerts-container").innerHTML =
-      `<p class="empty-state">Impossible de charger les alertes.</p>`;
+      `<p class="empty-state">Unable to load alerts.</p>`;
   }
 }
 
 // ── UTILS ──
 function formatCFA(amount) {
   if (!amount && amount !== 0) return "0 FCFA";
-  return new Intl.NumberFormat("fr-FR").format(Math.round(amount)) + " FCFA";
+  return new Intl.NumberFormat("en-US").format(Math.round(amount)) + " FCFA";
 }
 
 function formatDate(isoDate) {
   if (!isoDate) return "-";
-  return new Date(isoDate).toLocaleDateString("fr-FR", {
+  return new Date(isoDate).toLocaleDateString("en-US", {
     day: "2-digit",
     month: "short",
     year: "numeric",

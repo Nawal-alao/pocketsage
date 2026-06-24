@@ -9,6 +9,7 @@ import time
 import os
 import json
 from google import genai
+from google.genai import types
 from dotenv import load_dotenv
 from .budget_agent import BudgetAgent
 from .insight_agent import InsightAgent
@@ -125,7 +126,7 @@ class OrchestratorAgent:
 
     def __init__(self):
         self.client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
-        self.model_name = "gemini-2.0-flash-lite"
+        self.model_name = "gemini-2.5-flash"
         self.system_instruction = SYSTEM_PROMPT
         # Initialisation des sous-agents
         self.budget_agent = BudgetAgent()
@@ -137,11 +138,11 @@ class OrchestratorAgent:
 
         self.antigravity_agent = AntigravityAgent()
 
-    def _call_with_retry(self, fn, *args, retries=3, wait=30):
+    def _call_with_retry(self, fn, *args, retries=3, wait=30, **kwargs):
         """Appel API avec retry automatique en cas de quota dépassé."""
         for attempt in range(retries):
             try:
-                return fn(*args)
+                return fn(*args, **kwargs)
             except Exception as e:
                 if "429" in str(e) and attempt < retries - 1:
                     console_wait = wait * (attempt + 1)
@@ -159,7 +160,7 @@ class OrchestratorAgent:
                 self.client.models.generate_content,
                 model=self.model_name,
                 contents=message,
-                config={"system_instruction": self.system_instruction},
+                config=types.GenerateContentConfig(system_instruction=self.system_instruction),
             )
             text = result.text.strip()
 
@@ -181,7 +182,7 @@ class OrchestratorAgent:
         self.user_langs[user_id] = lang
         return WELCOME_MESSAGES.get(lang, WELCOME_MESSAGES["fr"])
 
-    def process(self, user_id: str, message: str) -> dict:
+    def process(self, user_id: str, message: str, requested_lang: str | None = None) -> dict:
         """
         Point d'entrée principal. Traite un message et retourne une réponse.
 
@@ -197,7 +198,8 @@ class OrchestratorAgent:
         # Détecter l'intention
         intent_data = self._detect_intent(message)
         intent = intent_data.get("intent", "general")
-        lang = intent_data.get("lang", self.user_langs.get(user_id, "fr"))
+        detected_lang = intent_data.get("lang", self.user_langs.get(user_id, "fr"))
+        lang = requested_lang or detected_lang
         month = intent_data.get("month", None)
 
         # Mémoriser la langue de l'utilisateur
