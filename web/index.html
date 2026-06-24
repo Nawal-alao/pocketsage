@@ -27,12 +27,12 @@
         <span class="nav-icon material-symbols-outlined">receipt_long</span> Transactions
       </button>
       <button class="nav-item" data-view="alerts">
-        <span class="nav-icon material-symbols-outlined">notifications</span> Alertes
+        <span class="nav-icon material-symbols-outlined">notifications</span> Alerts
       </button>
     </nav>
 
     <div class="lang-selector">
-      <p class="lang-label">Langue</p>
+      <p class="lang-label">Language</p>
       <div class="lang-buttons">
         <button class="lang-btn" data-lang="fr">FR</button>
         <button class="lang-btn active" data-lang="en">EN</button>
@@ -54,7 +54,7 @@
     <header class="header">
       <div class="header-left">
         <h1 class="page-title" id="page-title">Dashboard</h1>
-        <p class="page-subtitle" id="page-subtitle">Bienvenue sur PocketSage</p>
+        <p class="page-subtitle" id="page-subtitle">Welcome to PocketSage</p>
       </div>
       <div class="header-right">
         <div class="alert-badge" id="alert-badge"><span class="material-symbols-outlined">notifications</span></div>
@@ -70,21 +70,21 @@
         <div class="stat-card income">
           <div class="stat-icon"><span class="material-symbols-outlined">trending_up</span></div>
           <div class="stat-info">
-            <p class="stat-label">Revenus ce mois</p>
+            <p class="stat-label">Income this month</p>
             <p class="stat-value" id="stat-revenus">0 FCFA</p>
           </div>
         </div>
         <div class="stat-card expense">
           <div class="stat-icon"><span class="material-symbols-outlined">trending_down</span></div>
           <div class="stat-info">
-            <p class="stat-label">Dépenses ce mois</p>
+            <p class="stat-label">Expenses this month</p>
             <p class="stat-value" id="stat-depenses">0 FCFA</p>
           </div>
         </div>
         <div class="stat-card balance">
           <div class="stat-icon"><span class="material-symbols-outlined">account_balance_wallet</span></div>
           <div class="stat-info">
-            <p class="stat-label">Solde actuel</p>
+            <p class="stat-label">Current balance</p>
             <p class="stat-value" id="stat-solde">0 FCFA</p>
           </div>
         </div>
@@ -100,37 +100,37 @@
       <!-- Alert banner -->
       <div class="alert-banner" id="alert-banner" style="display:none">
         <span id="alert-icon" class="material-symbols-outlined">warning_amber</span>
-        <p id="alert-message">Chargement des alertes...</p>
+        <p id="alert-message">Loading alerts...</p>
       </div>
 
       <!-- Quick actions -->
       <div class="quick-actions">
-        <h2 class="section-title">Actions rapides</h2>
+        <h2 class="section-title">Quick actions</h2>
         <div class="actions-grid">
           <button class="action-btn" onclick="quickAction('depense')">
             <span class="material-symbols-outlined">paid</span>
-            <p>Ajouter dépense</p>
+            <p>Add expense</p>
           </button>
           <button class="action-btn" onclick="quickAction('revenu')">
             <span class="material-symbols-outlined">savings</span>
-            <p>Ajouter revenu</p>
+            <p>Add income</p>
           </button>
           <button class="action-btn" onclick="quickAction('analyse')">
             <span class="material-symbols-outlined">insights</span>
-            <p>Analyser</p>
+            <p>Analyze</p>
           </button>
           <button class="action-btn" onclick="quickAction('alerte')">
             <span class="material-symbols-outlined">notifications</span>
-            <p>Mes alertes</p>
+            <p>My alerts</p>
           </button>
         </div>
       </div>
 
       <!-- Recent transactions -->
       <div class="recent-transactions">
-        <h2 class="section-title">Dernières transactions</h2>
+        <h2 class="section-title">Recent transactions</h2>
         <div class="transactions-list" id="recent-list">
-          <p class="empty-state">Aucune transaction pour l'instant.<br/>Commence à parler à ton assistant ! 💬</p>
+          <p class="empty-state">No transactions yet.<br/>Start talking to your assistant! 💬</p>
         </div>
       </div>
 
@@ -168,7 +168,7 @@
     <section class="view" id="view-transactions">
       <div class="transactions-filters">
         <input type="month" id="month-filter" />
-        <button onclick="loadTransactions()">Filtrer</button>
+        <button onclick="loadTransactions()">Filter</button>
       </div>
       <div class="transactions-table-container">
         <table class="transactions-table">
@@ -184,7 +184,7 @@
           </thead>
           <tbody id="transactions-tbody">
             <tr>
-              <td colspan="6" class="empty-state">Aucune transaction</td>
+              <td colspan="6" class="empty-state">No transactions</td>
             </tr>
           </tbody>
         </table>
@@ -194,7 +194,7 @@
     <!-- Alerts View -->
     <section class="view" id="view-alerts">
       <div class="alerts-container" id="alerts-container">
-        <p class="empty-state">Chargement des alertes...</p>
+        <p class="empty-state">Loading alerts...</p>
       </div>
     </section>
 
